@@ -1,0 +1,14 @@
+# Dependências e banco local (gerados automaticamente)
+node_modules/
+database.sqlite
+*.sqlite-journal
+
+# SEGREDOS — nunca envie para o GitHub
+serviceAccountKey.json
+*-firebase-adminsdk-*.json
+.env
+.env.*
+
+# Sistema
+.DS_Store
+Thumbs.db

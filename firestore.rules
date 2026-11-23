@@ -1,0 +1,36 @@
+rules_version = '2';
+
+// Regras de segurança do Firestore (Firebase Console > Firestore Database > Regras).
+// O servidor usa o Firebase Admin SDK (que ignora estas regras); elas protegem o banco
+// contra qualquer acesso direto feito por um navegador.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function logado() { return request.auth != null; }
+    function perfilDe(uid) { return get(/databases/$(database)/documents/usuarios/$(uid)).data.perfil; }
+    function ehAdmin() { return logado() && perfilDe(request.auth.uid) == 'admin'; }
+
+    // Coleção de usuários (perfis RBAC)
+    match /usuarios/{uid} {
+      // Cada pessoa lê o próprio documento; admin lê todos.
+      allow read: if logado() && (request.auth.uid == uid || ehAdmin());
+
+      // Primeiro acesso: só pode criar o PRÓPRIO documento, e sempre com perfil "user".
+      allow create: if logado() && request.auth.uid == uid && request.resource.data.perfil == 'user';
+
+      // Somente admin altera perfis. (Quem não é admin não pode se promover.)
+      allow update: if ehAdmin();
+      allow delete: if false;
+    }
+
+    // Chamados ficam no banco da aplicação (SQLite); se um dia forem para o Firestore:
+    match /chamados/{id} {
+      allow read: if logado() && (resource.data.autorUid == request.auth.uid
+                     || perfilDe(request.auth.uid) in ['tecnico', 'admin']);
+      allow create: if logado() && request.resource.data.autorUid == request.auth.uid
+                     && request.resource.data.status == 'Aberto';
+      allow update: if logado() && perfilDe(request.auth.uid) in ['tecnico', 'admin'];
+      allow delete: if ehAdmin();
+    }
+  }
+}

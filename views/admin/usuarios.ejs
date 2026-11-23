@@ -1,0 +1,49 @@
+<%- include('../partials/header') %>
+
+<header class="page-header">
+  <div>
+    <p class="eyebrow">Administração</p>
+    <h1>Gestão de usuários</h1>
+    <p class="subtitle"><%= lista.length %> <%= lista.length === 1 ? 'usuário cadastrado' : 'usuários cadastrados' %> · <%= totais.admin %> admin · <%= totais.tecnico %> técnico(s) · <%= totais.user %> usuário(s)</p>
+  </div>
+</header>
+
+<section class="card card-flush">
+  <% if (!lista.length) { %>
+    <div class="empty"><%- icon('users', 36) %><h3>Nenhum usuário ainda</h3></div>
+  <% } else { %>
+    <div class="table-wrap">
+      <table class="table" id="tabela-usuarios">
+        <thead>
+          <tr><th>Usuário</th><th>E-mail</th><th>Perfil atual</th><th>Alterar perfil</th><th>Cadastro</th></tr>
+        </thead>
+        <tbody>
+          <% lista.forEach(function (u) { %>
+            <tr>
+              <td><span class="person"><span class="avatar avatar-sm"><%= iniciais(u.nome) %></span><strong><%= u.nome %></strong><% if (u.uid === user.uid) { %> <span class="muted">(você)</span><% } %></span></td>
+              <td class="muted"><%= u.email %></td>
+              <td><span class="badge badge-<%= PERFIS[u.perfil].cor %>"><%= PERFIS[u.perfil].label %></span></td>
+              <td>
+                <% if (u.uid === user.uid) { %>
+                  <span class="muted">—</span>
+                <% } else { %>
+                  <form method="POST" action="/admin/usuarios/<%= u.uid %>/perfil" class="perfil-form">
+                    <select name="perfil" aria-label="Perfil de <%= u.nome %>">
+                      <% Object.keys(PERFIS).forEach(function (p) { %>
+                        <option value="<%= p %>" <%= u.perfil === p ? 'selected' : '' %>><%= PERFIS[p].label %> (<%= p %>)</option>
+                      <% }) %>
+                    </select>
+                    <button type="submit" class="btn btn-secondary btn-sm"><%- icon('check', 16) %> Salvar</button>
+                  </form>
+                <% } %>
+              </td>
+              <td class="nowrap muted"><%= formatDate(u.criadoEm) %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</section>
+
+<%- include('../partials/footer') %>
